@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Retail VP Reverse Purchase Calculator — v29.3</title>
+<style>
+  :root {
+    --bg:#0b1020; --panel:#0f172a; --muted:#9aa4b2; --text:#e5e7eb;
+    --green:#22c55e; --green2:#16a34a; --blue:#3b82f6; --blue2:#1d4ed8;
+    --hover:#1e293b;
+  }
+  body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    background:radial-gradient(1200px 800px at 20% -10%, #121a35, transparent),
+    linear-gradient(160deg, #0b1020, #0a0f1a);color:var(--text)}
+  .wrap{max-width:1100px;margin:28px auto;padding:0 16px;position:relative}
+  h1{text-align:center;margin-bottom:16px;font-size:clamp(1.6rem,3vw,2.4rem)}
+
+  /* Hamburger Menu */
+  .hamburger{position:absolute;top:8px;right:16px;width:28px;height:22px;cursor:pointer;display:flex;
+    flex-direction:column;justify-content:space-between}
+  .hamburger span{display:block;height:4px;background:#fff;border-radius:2px;transition:.3s}
+  .menu{position:absolute;top:40px;right:10px;background:#0b1229;border:1px solid rgba(255,255,255,.15);
+    border-radius:10px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.6);opacity:0;
+    transform:translateY(-10px);pointer-events:none;transition:.3s}
+  .menu.open{opacity:1;transform:translateY(0);pointer-events:auto}
+  .menu a{display:block;padding:10px 18px;color:var(--text);text-decoration:none;transition:.2s}
+  .menu a:hover{background:var(--hover);font-weight:900}
+  .divider{height:1px;background:rgba(255,255,255,.1);margin:4px 0}
+
+  .mode-row{display:flex;gap:12px;justify-content:center;margin:12px 0 18px}
+  .mode-btn{border:0;padding:12px 16px;border-radius:999px;cursor:pointer;font-weight:900;color:#04130a;
+    transition:transform .12s ease,box-shadow .2s ease,filter .2s ease}
+  .btn-price{background:linear-gradient(160deg,var(--green),var(--green2))}
+  .btn-cash{background:linear-gradient(160deg,var(--blue),var(--blue2))}
+  .inactive{filter:grayscale(.3) brightness(.85);opacity:.85}
+
+  .panel{background:var(--panel);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+  .col-6{grid-column:span 6}@media(max-width:860px){.col-6{grid-column:span 12}}
+
+  label{font-weight:800;margin-bottom:6px;display:block}
+  input[type=number]{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);
+    background:#0b1229;color:var(--text);font-weight:800;font-size:16px}
+
+  .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:12px}
+  .card{grid-column:span 4;background:#0b1229;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;transition:.3s}
+  .card h3{margin:0 0 4px;font-size:14px;color:var(--muted)}
+  .card .val{font-size:clamp(1.3rem,2vw,1.6rem);font-weight:900}
+  .dimmed{opacity:0.5}
+  .card.emph{background:linear-gradient(160deg,#0e1f15,#0f2a1a);border-color:rgba(34,197,94,.45)}
+  .card.emph .val{color:#bbf7d0}
+  .card.commission{background:linear-gradient(160deg,#0f2a1a,#11361f);border-color:rgba(34,197,94,.5)}
+
+  .pie-container{text-align:center;margin-top:20px}
+  .pie-title{font-weight:900;font-size:clamp(1rem,2vw,1.2rem);margin-bottom:8px}
+  .pie-wrap{display:flex;justify-content:center}
+  .pie-svg{width:min(480px,92vw);height:auto}
+  text.center-label{fill:white;font-weight:900;font-size:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6))}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  <div class="menu" id="menu">
+    <a href="https://grate.sharepoint.com/sites/hub/rc/SitePages/Reverse%20Mortgage%20Lending.aspx" target="_blank">Reverse Resource Center</a>
+    <a href="https://grate.sharepoint.com/sites/hub/rc/sitepages/Reverse%20Mortgage%20Certification%20Process.aspx" target="_blank">Reverse Mortgage Certification</a>
+    <div class="divider"></div>
+    <a href="mortgage-game.html" target="_blank">Play the Mortgage Game</a>
+  </div>
+
+  <h1>Retail VP Reverse Purchase Calculator</h1>
+  <div class="mode-row">
+    <button id="btnPrice" class="mode-btn btn-price">Purchase Price Mode</button>
+    <button id="btnCash" class="mode-btn btn-cash inactive">Available Cash Mode</button>
+  </div>
+
+  <div class="panel">
+    <div class="grid">
+      <div class="col-6"><label>Borrower Age</label><input type="number" id="age" min="62" max="99" value="75"></div>
+      <div class="col-6" id="priceWrap"><label>Purchase Price</label><input type="number" id="price" value="785374"></div>
+      <div class="col-6" id="cashWrap" style="display:none"><label>Available Cash</label><input type="number" id="cash" value="500000"></div>
+    </div>
+
+    <div class="cards">
+      <div class="card emph"><h3>Maximum Home Value / Purchase Price</h3><div class="val" id="maxHome">$0</div></div>
+      <div class="card"><h3>Starting Loan Amount</h3><div class="val" id="loanAmt">$0</div></div>
+      <div class="card"><h3>Down Payment (Including Costs)</h3><div class="val" id="downPayment">$0</div></div>
+      <div class="card" id="cashSavedCard"><h3>Reverse Contribution / Cash Saved</h3><div class="val" id="cashSaved">$0</div></div>
+      <div class="card commission"><h3>Retail VP Commission*</h3><div class="val" id="loComm">$0</div></div>
+      <div class="card"><h3>Mortgage Payment</h3><div class="val">$0</div></div>
+    </div>
+
+    <div class="pie-container">
+      <div id="pieTitle" class="pie-title">Purchase Price: $0</div>
+      <div class="pie-wrap">
+        <svg class="pie-svg" viewBox="0 0 280 280">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#16a34a"/></linearGradient>
+            <linearGradient id="gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#64748b"/></linearGradient>
+          </defs>
+          <g transform="translate(140,140)" id="pieGroup"></g>
+        </svg>
+      </div>
+    </div>
+
+    <div style="color:var(--muted);font-size:12px;margin-top:12px">
+      * Based on Retail VP Commission schedule (Loan × 1.5% + $1,500) and $6,000 HECM Origination Fee.
+      FHA HECM lending limit applies. Calculations cap eligible value at $1,209,750.
+    </div>
+  </div>
+</div>
+
+<script>
+const PLF={62:0.334,63:0.341,64:0.348,65:0.355,66:0.363,67:0.370,68:0.379,69:0.387,70:0.392,71:0.392,72:0.393,73:0.402,74:0.411,75:0.421,76:0.427,77:0.438,78:0.449,79:0.455,80:0.466,81:0.478,82:0.491,83:0.503,84:0.516,85:0.530,86:0.544,87:0.558,88:0.571,89:0.586,90:0.602,91:0.618,92:0.635,93:0.653,94:0.671,95:0.688,96:0.698,97:0.704,98:0.704,99:0.704};
+const FHA=1209750, fmtUSD=v=>"$"+Math.max(0,Math.round(v||0)).toLocaleString(), pct=(n,d)=>d>0?Math.round((n/d)*100):0;
+
+const age=document.getElementById('age'),price=document.getElementById('price'),cash=document.getElementById('cash');
+const maxHome=document.getElementById('maxHome'),loanAmt=document.getElementById('loanAmt'),downPayment=document.getElementById('downPayment');
+const cashSaved=document.getElementById('cashSaved'),cashSavedCard=document.getElementById('cashSavedCard'),loComm=document.getElementById('loComm'),pieTitle=document.getElementById('pieTitle'),pieGroup=document.getElementById('pieGroup');
+const btnPrice=document.getElementById('btnPrice'), btnCash=document.getElementById('btnCash');
+const priceWrap=document.getElementById('priceWrap'), cashWrap=document.getElementById('cashWrap');
+
+// Hamburger toggle
+const hamburger=document.getElementById('hamburger'), menu=document.getElementById('menu');
+hamburger.addEventListener('click',()=>menu.classList.toggle('open'));
+document.addEventListener('click',e=>{if(!menu.contains(e.target)&&!hamburger.contains(e.target))menu.classList.remove('open');});
+
+let mode='price';
+btnPrice.addEventListener('click',()=>setMode('price'));
+btnCash.addEventListener('click',()=>setMode('cash'));
+[age,price,cash].forEach(i=>i.addEventListener('input',recalc));
+
+function setMode(m){
+  mode=m;
+  btnPrice.classList.toggle('inactive',m!=='price');
+  btnCash.classList.toggle('inactive',m!=='cash');
+  priceWrap.style.display=m==='price'?'block':'none';
+  cashWrap.style.display=m==='cash'?'block':'none';
+  recalc();
+}
+
+function recalc(){
+  const a=Math.max(62,Math.min(99,parseInt(age.value||0))); const plf=PLF[a]||0;
+  let home=0,pl=0,cashToClose=0;
+
+  if(mode==='price'){
+    home=Math.min(Number(price.value||0),FHA);
+    pl=home*plf;
+    cashToClose=(home-pl)+(home*0.05)+6000;
+  } else {
+    let c=Math.max(0, Number(cash.value||0));
+    const maxCash=FHA*(1.05 - plf) + 6000;
+    if(c>maxCash){ alert("Jumbo products available — talk to your Reverse Specialist for pricing."); c=Math.floor(maxCash); cash.value=c; }
+    const denom=1.05 - plf;
+    if(denom<=0){ updateUI(0,0,0); return; }
+    home=(c-6000)/denom;
+    if(home>FHA) home=FHA;
+    pl=home*plf;
+    cashToClose=(home-pl)+(home*0.05)+6000;
+  }
+
+  updateUI(home,pl,cashToClose);
+}
+
+function updateUI(home, pl, cashToClose){
+  maxHome.textContent=fmtUSD(home);
+  loanAmt.textContent=fmtUSD(pl);
+  downPayment.textContent=fmtUSD(cashToClose);
+  if(mode==='cash'){
+    cashSaved.textContent="$0";
+    cashSavedCard.classList.add('dimmed');
+  } else {
+    cashSaved.textContent=fmtUSD(home - cashToClose);
+    cashSavedCard.classList.remove('dimmed');
+  }
+  loComm.textContent=fmtUSD(pl*0.015 + 1500);
+  pieTitle.textContent="Purchase Price: "+fmtUSD(home);
+  drawPie(pl, cashToClose, home);
+}
+
+function drawPie(pl,cashToClose,home){
+  pieGroup.innerHTML='';
+  const r=110,total=Math.max(1, pl + cashToClose); let start=-Math.PI/2;
+  const slices=[{val:pl,color:'url(#g)'},{val:cashToClose,color:'url(#gr)'}];
+  slices.forEach(s=>{
+    const angle=(s.val/total)*2*Math.PI;
+    const x1=r*Math.cos(start), y1=r*Math.sin(start);
+    const end=start+angle;
+    const x2=r*Math.cos(end), y2=r*Math.sin(end);
+    const large=angle>Math.PI?1:0;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M0,0 L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z`);
+    path.setAttribute('fill', s.color);
+    path.style.transition='all .6s ease-out';
+    pieGroup.appendChild(path);
+    start=end;
+  });
+  const s1=`Reverse Pays: ${fmtUSD(pl)} (${pct(pl,home)}%)`;
+  const s2=`You Bring: ${fmtUSD(cashToClose)} (${pct(cashToClose,home)}%)`;
+  const longest=Math.max(s1.length,s2.length);
+  const size=Math.max(12,Math.min(18,Math.floor(300/longest*8)));
+  const t1=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t1.setAttribute('x','0');t1.setAttribute('y','-8');t1.setAttribute('class','center-label');
+  t1.setAttribute('text-anchor','middle');t1.style.fontSize=size+'px';t1.textContent=s1;
+  const t2=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t2.setAttribute('x','0');t2.setAttribute('y','16');t2.setAttribute('class','center-label');
+  t2.setAttribute('text-anchor','middle');t2.style.fontSize=size+'px';t2.textContent=s2;
+  pieGroup.appendChild(t1); pieGroup.appendChild(t2);
+}
+
+recalc();
+
+      // Update purchasing power card
+      let purchasingPowerCard = document.getElementById("purchasingPowerCard");
+      let purchasingPowerContent = document.getElementById("purchasingPowerContent");
+      if (purchasingPowerCard && purchasingPowerContent) {
+        if (typeof mode !== "undefined" && mode === "availableCash") {
+          let increaseDollar = maxHomeValue - availableCash;
+          if (increaseDollar < 0) increaseDollar = 0;
+          let increasePercent = availableCash > 0 ? ((increaseDollar / availableCash) * 100).toFixed(0) : 0;
+          purchasingPowerContent.innerHTML = `<div style="font-size:1.2rem;font-weight:bold;">+${increasePercent}%<br>+$${increaseDollar.toLocaleString()}</div>`;
+          purchasingPowerCard.classList.remove("dimmed");
+        } else {
+          purchasingPowerContent.innerHTML = "<div style='color:#666;'>Only available in Available Cash Mode</div>";
+          purchasingPowerCard.classList.add("dimmed");
+        }
+      }
+
+</script>
+</body>
+</html>
