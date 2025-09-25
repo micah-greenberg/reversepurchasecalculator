@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Mortgage! Choose an Option!</title>
+<style>
+  :root{
+    --bg1:#0b1020; --bg2:#0a0f1a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb;
+    --green:#22c55e; --green-2:#16a34a; --blue:#3b82f6; --blue-2:#1d4ed8;
+  }
+  html,body{height:100%}
+  body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+       background:linear-gradient(160deg,var(--bg1),var(--bg2)); color:var(--text);}
+  .wrap{max-width:980px;margin:28px auto;padding:0 16px;}
+  .title{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;text-align:center;margin:8px 0 6px}
+  .subtitle{color:var(--muted);text-align:center;margin-bottom:18px}
+  .panel{background:var(--panel);border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .progress{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin:4px 0 18px}
+  .progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .3s ease}
+  .q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .q-idx{font-weight:800;letter-spacing:.02em;color:var(--muted)}
+  .q-section{font-size:1.1rem;font-weight:700;margin:10px 0 4px}
+  .q-text{font-size:clamp(1.2rem,2.2vw,1.6rem);font-weight:700;line-height:1.25;margin:0 0 14px}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .btn{border:none;padding:16px 16px;border-radius:14px;font-weight:700;font-size:17px;cursor:pointer;color:white;
+       box-shadow:0 10px 24px rgba(0,0,0,.25);transition:transform .12s ease, box-shadow .2s ease, filter .2s ease}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.35);filter:brightness(1.06)}
+  .btn:active{transform:translateY(0)}
+  .btn-left{background:linear-gradient(160deg,var(--blue),var(--blue-2))}
+  .btn-right{background:linear-gradient(160deg,var(--green),var(--green-2))}
+  .nav{display:flex;justify-content:flex-start;gap:12px;margin-top:18px}
+  .link{color:var(--muted);text-decoration:none;cursor:pointer}
+  .link:hover{color:white}
+  .hide{display:none}
+  /* Summary */
+  .summary{display:none}
+  .sum-title{font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:900;margin-bottom:6px;text-align:center}
+  .sum-list{margin-top:12px;line-height:1.5}
+  .result-msg{margin-top:16px;font-size:1.3rem;text-align:center;font-weight:800;color:#bbf7d0}
+  .cta{margin-top:16px;text-align:center}
+  .cta a{display:inline-block;background:#22c55e;color:white;padding:12px 20px;border-radius:12px;
+         text-decoration:none;font-weight:800;transition:background .2s ease}
+  .cta a:hover{background:#16a34a}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Build Your Mortgage!</div>
+    <div class="subtitle">Choose an option!</div>
+
+    <div class="panel" id="game">
+      <div class="q-header">
+        <div class="q-idx" id="qIdx">Question 1 of 10</div>
+        <div class="q-idx" id="qProgLabel">0%</div>
+      </div>
+      <div class="progress"><div class="bar" id="qProg"></div></div>
+
+      <div class="q-section" id="qSection"></div>
+      <div class="q-text" id="qText"></div>
+
+      <div class="answers">
+        <button id="btnLeft" class="btn btn-left">Left Option</button>
+        <button id="btnRight" class="btn btn-right">Right Option</button>
+      </div>
+
+      <div class="nav">
+        <a href="#" id="backBtn" class="link hide">← Back</a>
+      </div>
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="sum-title">Your Choices</div>
+      <div class="panel sum-list" id="listChoices"></div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="cta">
+        <a id="ctaPlayAgain" href="#">Start Over</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+const QUESTIONS = [
+  {section:"Payment Flexibility", text:"What happens if you don’t make a payment?", left:"Late fees and credit report hits.", right:"Nothing happens. You’re still in good standing."},
+  {section:"Use of Equity", text:"Where does your payment go?", left:"To the bank, permanently.", right:"To the bank, but also dollar for dollar into a line of credit that you can access anytime."},
+  {section:"Control Over Payments", text:"Who controls the payment schedule?", left:"The bank, fixed monthly payments.", right:"You do. Pay as much or as little as you want."},
+  {section:"Risk of Missing Payments", text:"What happens if you miss multiple payments?", left:"Foreclosure risk increases.", right:"No foreclosure risk due to non-payment."},
+  {section:"Credit Impact", text:"How does missing a payment affect your credit?", left:"Negative impact after 30-60 days.", right:"No impact at all."},
+  {section:"Eligibility", text:"How easy is it to qualify?", left:"Strict income and debt-to-income requirements.", right:"Relaxed income requirements, as no payment is required."},
+  {section:"Loan Balance Growth", text:"What happens to your loan balance over time if you don’t make payments?", left:"Not applicable (payments required).", right:"Balance grows due to interest accrual, but no penalties."},
+  {section:"Equity Access", text:"Can you access your equity easily?", left:"Not without refinancing or a second mortgage.", right:"Yes, via a flexible line of credit that is guaranteed by the government."},
+  {section:"Peace of Mind", text:"Which mortgage provides more financial peace of mind in retirement?", left:"Requires consistent payments, even on a fixed income.", right:"Payments are optional, offering more security."},
+  {section:"Future Flexibility", text:"What happens if you decide to sell the home?", left:"Pay off the loan balance, no extra benefits.", right:"Same process, but heirs or you won’t owe more than the home’s value."}
+];
+
+let current=0;
+const choices=new Array(QUESTIONS.length).fill(null);
+let reverseCount=0;
+const qSection=document.getElementById('qSection');
+const qText=document.getElementById('qText');
+const btnLeft=document.getElementById('btnLeft');
+const btnRight=document.getElementById('btnRight');
+const qIdx=document.getElementById('qIdx');
+const qProg=document.getElementById('qProg');
+const qProgLabel=document.getElementById('qProgLabel');
+const backBtn=document.getElementById('backBtn');
+const game=document.getElementById('game');
+const summary=document.getElementById('summary');
+const listChoices=document.getElementById('listChoices');
+const resultMsg=document.getElementById('resultMsg');
+
+function setQuestion(i){
+  const q=QUESTIONS[i];
+  qSection.textContent=q.section;
+  qText.textContent=q.text;
+  btnLeft.textContent=q.left;
+  btnRight.textContent=q.right;
+  qIdx.textContent=`Question ${i+1} of ${QUESTIONS.length}`;
+  qProg.style.width=`${Math.round((i)/QUESTIONS.length*100)}%`;
+  qProgLabel.textContent=`${Math.round((i)/QUESTIONS.length*100)}%`;
+  backBtn.classList.toggle('hide', i===0);
+}
+
+function updateReverseCount(){
+  reverseCount=choices.filter(c=>c && c.pick==='R').length;
+}
+
+function pick(side){
+  choices[current]={pick:side};
+  updateReverseCount();
+  if(current<QUESTIONS.length-1){
+    current++;
+    setQuestion(current);
+  }else{
+    finish();
+  }
+}
+
+function goBack(e){
+  e.preventDefault();
+  if(current>0){
+    current--;
+    setQuestion(current);
+  }
+}
+
+function finish(){
+  qProg.style.width='100%';
+  qProgLabel.textContent='100%';
+  listChoices.innerHTML=choices.map((c,i)=>`<p><strong>${i+1}. ${QUESTIONS[i].section}:</strong> ${QUESTIONS[i][c.pick==='L'?'left':'right']}</p>`).join("");
+  const majority = reverseCount > QUESTIONS.length/2;
+  resultMsg.textContent = majority
+    ? `Based on your answers, a Reverse Mortgage is the obvious choice! (${reverseCount}/${QUESTIONS.length} reverse-friendly answers)`
+    : `You chose ${reverseCount}/${QUESTIONS.length} reverse-friendly answers. A traditional mortgage might still fit, but explore your reverse options.`;
+  game.style.display='none';
+  summary.style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+btnLeft.addEventListener('click',()=>pick('L'));
+btnRight.addEventListener('click',()=>pick('R'));
+backBtn.addEventListener('click',goBack);
+document.getElementById('ctaPlayAgain').addEventListener('click',(e)=>{
+  e.preventDefault();current=0;choices.fill(null);reverseCount=0;
+  summary.style.display='none';game.style.display='block';setQuestion(0);
+});
+
+setQuestion(0);
+</script>
+</body>
+</html>
